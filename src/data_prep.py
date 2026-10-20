@@ -11,7 +11,8 @@ import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder, FunctionTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import FunctionTransformer
 from sklearn.model_selection import train_test_split
 
 import config as cfg
@@ -68,7 +69,7 @@ def _cfg(name, default):
 # Loading
 # =======================================================================================
 def load_raw():
-    """Read cfg.RAW_CSV with na_values=['?'] so '?' becomes NaN; return the DataFrame."""
+    """TODO: read cfg.RAW_CSV with na_values=['?'] so '?' becomes NaN; return the DataFrame."""
     path = _cfg("RAW_CSV", "data/diabetic_data.csv")
     df = pd.read_csv(path, na_values=["?"], low_memory=False)
     return df
@@ -78,21 +79,25 @@ def load_raw():
 # Stage 2.1 — Data cleaning
 # =======================================================================================
 def clean(df):
-    """Stage 2.1 — cleaning.
-
-    2.1.1  '?' -> NaN (re-applied defensively), whitespace stripped, 'Unknown/Invalid' gender
-           treated as missing, and the unusable columns removed: cfg.DROP_COLS (e.g. weight
-           ~97% missing, payer_code ~40% and purely administrative) plus every constant /
-           near-constant medication column, which carries no signal.
-    2.1.2  keep the FIRST encounter per patient (drop_duplicates('patient_nbr')) so rows are
-           independent and no patient can span two splits; drop expired/hospice discharges
-           (discharge_disposition_id in cfg.EXPIRED_HOSPICE_DISPOSITIONS), whose label is
-           structurally invalid because those patients cannot be readmitted.
-    2.1.3  build the binary target cfg.TARGET = 1 if readmitted == '<30' else 0.
-
-    The original index is preserved so downstream splits can be traced back to raw rows.
-    Returns the cleaned frame (~69,973 rows, ~9% positive).
-    """
+    """TODO (Stage 2.1): keep the FIRST encounter per patient (drop_duplicates('patient_nbr'))
+    to prevent patient-level leakage; drop expired/hospice discharges
+    (discharge_disposition_id in cfg.EXPIRED_HOSPICE_DISPOSITIONS); build the binary target
+    cfg.TARGET = 1 if readmitted == '<30' else 0; drop the cfg.DROP_COLS that are present.
+    Return the cleaned frame (~69,973 rows, ~9% positive)."""
+    # Stage 2.1 — cleaning.
+    #
+    # 2.1.1  '?' -> NaN (re-applied defensively), whitespace stripped, 'Unknown/Invalid' gender
+    #        treated as missing, and the unusable columns removed: cfg.DROP_COLS (e.g. weight
+    #        ~97% missing, payer_code ~40% and purely administrative) plus every constant /
+    #        near-constant medication column, which carries no signal.
+    # 2.1.2  keep the FIRST encounter per patient (drop_duplicates('patient_nbr')) so rows are
+    #        independent and no patient can span two splits; drop expired/hospice discharges
+    #        (discharge_disposition_id in cfg.EXPIRED_HOSPICE_DISPOSITIONS), whose label is
+    #        structurally invalid because those patients cannot be readmitted.
+    # 2.1.3  build the binary target cfg.TARGET = 1 if readmitted == '<30' else 0.
+    #
+    # The original index is preserved so downstream splits can be traced back to raw rows.
+    # Returns the cleaned frame (~69,973 rows, ~9% positive).
     target = _cfg("TARGET", "readmitted_30d")
     expired = list(_cfg("EXPIRED_HOSPICE_DISPOSITIONS", [11, 13, 14, 19, 20, 21]))
     drop_cols = list(_cfg("DROP_COLS", ["weight", "payer_code"]))
@@ -164,26 +169,29 @@ def map_icd9(code):
 
 
 def engineer_features(df):
-    """Stage 2.2 — dataset-specific feature engineering.
-
-    2.2.1  diag_1/2/3 -> clinical categories via map_icd9 (circulatory, respiratory, diabetes,
-           injury, digestive, genitourinary, musculoskeletal, neoplasms, other, missing),
-           replaced IN PLACE so the column names stay diag_1/2/3.
-    2.2.2  age band -> numeric midpoint (in place, '[70-80)' -> 75); service_utilization =
-           number_outpatient + number_emergency + number_inpatient (prior utilisation is the
-           strongest EDA signal); num_med_changes = count of 'Up'/'Down' across cfg.MED_COLS
-           (regimen instability proxy) and num_meds_prescribed (polypharmacy); medical_specialty
-           collapsed in place to top-k + 'Other' with an explicit 'Missing' level (~49% missing,
-           and the missingness is informative).
-
-    Transforms are applied in place (rather than adding *_group / age_midpoint copies) so the
-    frame keeps the raw schema that src/generate_current_batch.py shifts (age + 10, diag_1 ->
-    'Circulatory'). Every derived column it does not recompute is deliberately avoided, so a
-    simulated batch can never carry a stale engineered feature.
-
-    Nominal ID codes (ID_CODE_COLS) are cast to string so they are one-hot encoded rather than
-    treated as magnitudes. Returns the engineered frame; the index is preserved.
-    """
+    """TODO (Stage 2.2): group ICD9 diag_1/2/3 into clinical categories; map the age band to a
+    numeric midpoint; service_utilization = number_outpatient + number_emergency + number_inpatient;
+    num_med_changes = count of 'Up'/'Down' across cfg.MED_COLS; collapse high-cardinality
+    medical_specialty to top-k + 'Other'. Return the engineered frame."""
+    # Stage 2.2 — dataset-specific feature engineering.
+    #
+    # 2.2.1  diag_1/2/3 -> clinical categories via map_icd9 (circulatory, respiratory, diabetes,
+    #        injury, digestive, genitourinary, musculoskeletal, neoplasms, other, missing),
+    #        replaced IN PLACE so the column names stay diag_1/2/3.
+    # 2.2.2  age band -> numeric midpoint (in place, '[70-80)' -> 75); service_utilization =
+    #        number_outpatient + number_emergency + number_inpatient (prior utilisation is the
+    #        strongest EDA signal); num_med_changes = count of 'Up'/'Down' across cfg.MED_COLS
+    #        (regimen instability proxy) and num_meds_prescribed (polypharmacy); medical_specialty
+    #        collapsed in place to top-k + 'Other' with an explicit 'Missing' level (~49% missing,
+    #        and the missingness is informative).
+    #
+    # Transforms are applied in place (rather than adding *_group / age_midpoint copies) so the
+    # frame keeps the raw schema that src/generate_current_batch.py shifts (age + 10, diag_1 ->
+    # 'Circulatory'). Every derived column it does not recompute is deliberately avoided, so a
+    # simulated batch can never carry a stale engineered feature.
+    #
+    # Nominal ID codes (ID_CODE_COLS) are cast to string so they are one-hot encoded rather than
+    # treated as magnitudes. Returns the engineered frame; the index is preserved.
     med_cols = list(_cfg("MED_COLS", []))
     top_specialties = list(_cfg("TOP_K_SPECIALTIES", TOP_SPECIALTIES))
 
@@ -236,7 +244,8 @@ def engineer_features(df):
 # Stage 2.3 — Feature transformation
 # =======================================================================================
 def get_feature_lists(df):
-    """Return (numeric_cols, categorical_cols), excluding cfg.TARGET and identifier columns."""
+    """TODO: return (numeric_cols, categorical_cols), excluding cfg.TARGET."""
+    # Return (numeric_cols, categorical_cols), excluding cfg.TARGET and identifier columns.
     target = _cfg("TARGET", "readmitted_30d")
     exclude = set([target]) | set(LEAKY_COLS)
     features = df.drop(columns=[c for c in exclude if c in df.columns])
@@ -273,16 +282,18 @@ def as_category_strings(X):
 
 
 def build_preprocessor(numeric, categorical):
-    """Stage 2.3 — ONE ColumnTransformer, returned UNFITTED.
-
-    numeric     : median SimpleImputer (robust to the right skew seen in EDA) + StandardScaler
-    categorical : string normalisation (ID codes stay '1', not 1, after CSV/JSON round-trips) +
-                  constant SimpleImputer ('Missing' kept as its own informative level) +
-                  OneHotEncoder(handle_unknown='ignore') so unseen categories are safe at
-                  inference time instead of raising.
-
-    Fitting happens on the TRAIN split only (in the notebook / src/train.py), never here.
-    """
+    """TODO (Stage 2.3): return ONE ColumnTransformer — numeric: median SimpleImputer + StandardScaler;
+    categorical: constant SimpleImputer + OneHotEncoder(handle_unknown='ignore'). Do NOT fit it here
+    (it is fit on the TRAIN split only)."""
+    # Stage 2.3 — ONE ColumnTransformer, returned UNFITTED.
+    #
+    # numeric     : median SimpleImputer (robust to the right skew seen in EDA) + StandardScaler
+    # categorical : string normalisation (ID codes stay '1', not 1, after CSV/JSON round-trips) +
+    #               constant SimpleImputer ('Missing' kept as its own informative level) +
+    #               OneHotEncoder(handle_unknown='ignore') so unseen categories are safe at
+    #               inference time instead of raising.
+    #
+    # Fitting happens on the TRAIN split only (in the notebook / src/train.py), never here.
     numeric_pipe = Pipeline([
         ("impute", SimpleImputer(strategy="median")),
         ("scale", StandardScaler()),
@@ -305,20 +316,23 @@ def build_preprocessor(numeric, categorical):
 # Model frame + Stage 2.4 splitting
 # =======================================================================================
 def get_model_frame():
-    """Return engineer_features(clean(load_raw()))."""
+    """TODO: return engineer_features(clean(load_raw()))."""
     return engineer_features(clean(load_raw()))
 
 
 def get_splits(df=None):
-    """Stage 2.4.1 — STRATIFIED train/val/test split created BEFORE any fitting.
-
-    Uses cfg.RANDOM_STATE, cfg.TEST_SIZE and cfg.VAL_SIZE, with validation carved out of the
-    train split. Identifier columns are removed from X so nothing non-clinical leaks in. Rows
-    are already one-per-patient (2.1.2), so a stratified row split is also a patient split and
-    the class ratio is preserved across all three splits.
-
-    Returns X_train, X_val, X_test, y_train, y_val, y_test.
-    """
+    """TODO (Stage 2.4): create a STRATIFIED train/val/test split using cfg.RANDOM_STATE,
+    cfg.TEST_SIZE and cfg.VAL_SIZE (val taken from the train split). Return
+    X_train, X_val, X_test, y_train, y_val, y_test. The class ratio must be preserved across splits;
+    the preprocessor is fit on TRAIN only (in the notebook / train.py), never on the full data."""
+    # Stage 2.4.1 — STRATIFIED train/val/test split created BEFORE any fitting.
+    #
+    # Uses cfg.RANDOM_STATE, cfg.TEST_SIZE and cfg.VAL_SIZE, with validation carved out of the
+    # train split. Identifier columns are removed from X so nothing non-clinical leaks in. Rows
+    # are already one-per-patient (2.1.2), so a stratified row split is also a patient split and
+    # the class ratio is preserved across all three splits.
+    #
+    # Returns X_train, X_val, X_test, y_train, y_val, y_test.
     target = _cfg("TARGET", "readmitted_30d")
     random_state = _cfg("RANDOM_STATE", 42)
     test_size = _cfg("TEST_SIZE", 0.20)
