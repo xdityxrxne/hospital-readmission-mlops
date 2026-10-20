@@ -1,0 +1,15 @@
+# Keep the build context to what the Dockerfile copies (app.py, config.py, src/, artifacts/)
+.venv/
+.git/
+.github/
+__pycache__/
+**/__pycache__/
+mlruns/
+mlflow.db
+data/
+tests/
+*.ipynb
+.ipynb_checkpoints/
+artifacts/current_batch.csv
+artifacts/drift_report.html
+artifacts/evidence/

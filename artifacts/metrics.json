@@ -1,0 +1,53 @@
+{
+  "best_model": "logistic_regression",
+  "selection_metric": "val_roc_auc",
+  "registered_model": "readmission_classifier",
+  "registered_version": 1,
+  "run_id": "9b3f6eac457b49dfb1f4dfa90ac8b391",
+  "validation": {
+    "roc_auc": 0.6528,
+    "pr_auc": 0.1715,
+    "f1": 0.2268,
+    "recall": 0.5428,
+    "precision": 0.1433,
+    "accuracy": 0.6681
+  },
+  "validation_confusion": {
+    "tn": 6935,
+    "fp": 3257,
+    "fn": 459,
+    "tp": 545
+  },
+  "test": {
+    "roc_auc": 0.6454,
+    "pr_auc": 0.1666,
+    "f1": 0.2186,
+    "recall": 0.5235,
+    "precision": 0.1382,
+    "accuracy": 0.6645
+  },
+  "test_confusion": {
+    "tn": 8642,
+    "fp": 4098,
+    "fn": 598,
+    "tp": 657
+  },
+  "all_validation_metrics": {
+    "logistic_regression": {
+      "roc_auc": 0.6528,
+      "pr_auc": 0.1715,
+      "f1": 0.2268,
+      "recall": 0.5428,
+      "precision": 0.1433,
+      "accuracy": 0.6681
+    },
+    "xgboost": {
+      "roc_auc": 0.648,
+      "pr_auc": 0.1754,
+      "f1": 0.2281,
+      "recall": 0.4502,
+      "precision": 0.1528,
+      "accuracy": 0.7268
+    }
+  }
+}

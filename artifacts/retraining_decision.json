@@ -1,0 +1,30 @@
+{
+  "evaluated_at": "2026-10-20T06:25:03.644947+00:00",
+  "thresholds": {
+    "psi_threshold": 0.2,
+    "drift_share_threshold": 0.3
+  },
+  "signals": {
+    "prediction_psi": 0.2484,
+    "share_drifted": 0.1622,
+    "number_of_drifted_columns": 6,
+    "number_of_columns": 37,
+    "dataset_drift": false
+  },
+  "retrain_triggered": true,
+  "reasons": [
+    "prediction drift: PSI 0.2484 > 0.2 (significant shift (>0.20))"
+  ],
+  "action": "retrained_and_registered",
+  "new_model": "logistic_regression",
+  "new_metrics": {
+    "roc_auc": 0.6454,
+    "pr_auc": 0.1666,
+    "f1": 0.2186,
+    "recall": 0.5235,
+    "precision": 0.1382,
+    "accuracy": 0.6645
+  },
+  "new_registered_version": 2,
+  "registered_model": "readmission_classifier"
+}
