@@ -1,5 +1,5 @@
 {
-  "evaluated_at": "2026-10-20T06:25:03.644947+00:00",
+  "evaluated_at": "2026-10-20T07:01:22.211138+00:00",
   "thresholds": {
     "psi_threshold": 0.2,
     "drift_share_threshold": 0.3

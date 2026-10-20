@@ -2,8 +2,8 @@
   "best_model": "logistic_regression",
   "selection_metric": "val_roc_auc",
   "registered_model": "readmission_classifier",
-  "registered_version": 1,
-  "run_id": "9b3f6eac457b49dfb1f4dfa90ac8b391",
+  "registered_version": 2,
+  "run_id": "ca97d70766734c4383f8ef7a187860d6",
   "validation": {
     "roc_auc": 0.6528,
     "pr_auc": 0.1715,
